@@ -51,6 +51,58 @@ const startServer = async () => {
             ) ENGINE=InnoDB;
         `);
 
+        // Ensure comments table exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
+        // Ensure comment_likes table exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS comment_likes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                comment_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_comment_like (comment_id, user_id),
+                FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
+        // Ensure replies table exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS replies (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                comment_id INT NOT NULL,
+                user_id INT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
+        // Ensure reply_likes table exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS reply_likes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                reply_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_reply_like (reply_id, user_id),
+                FOREIGN KEY (reply_id) REFERENCES replies(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
         connection.release();
 
         app.listen(PORT, () => {

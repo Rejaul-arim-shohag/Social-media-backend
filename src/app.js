@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/auth.routes.js";
 import postRouter from "./modules/post/post.routes.js";
+import commentRouter from "./modules/comment/comment.routes.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/posts", postRouter);
+app.use("/api/v1", commentRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
