@@ -1,6 +1,6 @@
 import { validationResult } from "express-validator";
 import cloudinary from "../../config/cloudinary.js";
-import { createPost } from "./post.model.js";
+import { createPost, getAllPosts } from "./post.model.js";
 
 export async function createPostHandler(req, res) {
   const errors = validationResult(req);
@@ -45,5 +45,15 @@ export async function createPostHandler(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to create post" });
+  }
+}
+
+export async function getAllPostsHandler(req, res) {
+  try {
+    const posts = await getAllPosts();
+    res.json({ success: true, posts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load posts" });
   }
 }

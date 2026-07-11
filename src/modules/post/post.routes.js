@@ -2,9 +2,11 @@ import express from "express";
 import { body } from "express-validator";
 import { authenticate } from "../auth/auth.middleware.js";
 import upload from "../../middleware/upload.js";
-import { createPostHandler } from "./post.controller.js";
+import { createPostHandler, getAllPostsHandler } from "./post.controller.js";
 
 const router = express.Router();
+
+router.get("/", getAllPostsHandler);
 
 router.post(
   "/",
