@@ -6,6 +6,10 @@ import { createUser, findUserByEmail, findUserById } from "../user/user.model.js
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 
+if (!process.env.JWT_SECRET) {
+  console.warn("Missing JWT Secret in env file");
+}
+
 function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
@@ -62,14 +66,18 @@ export async function login(req, res) {
 
     const token = signToken({ id: user.id, email: user.email });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+    res.status(200).json({
+        success: true,
+        message: "Login successful",
+        token,
+        user: {
+            id: user.id,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            email: user.email,
+        },
     });
 
-    res.json({ success: true, user: { id: user.id, firstName: user.first_name, lastName: user.last_name, email: user.email } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
