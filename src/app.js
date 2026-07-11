@@ -23,10 +23,10 @@ app.get("/", (req, res) => {
     });
 });
 
-// Auth routes
-app.use("/api/auth", authRouter);
+// API routes
+app.use("/api/v1/auth", authRouter);
 
-// Global error handler (log and return JSON)
+// Global error handler
 app.use((err, req, res, next) => {
     console.error("Unhandled error:", err);
     if (res.headersSent) return next(err);
