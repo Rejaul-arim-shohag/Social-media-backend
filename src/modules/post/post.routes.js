@@ -2,11 +2,18 @@ import express from "express";
 import { body } from "express-validator";
 import { authenticate } from "../auth/auth.middleware.js";
 import upload from "../../middleware/upload.js";
-import { createPostHandler, getAllPostsHandler } from "./post.controller.js";
+import {
+  createPostHandler,
+  getAllPostsHandler,
+  toggleLikeHandler,
+  getPostLikesHandler,
+} from "./post.controller.js";
 
 const router = express.Router();
 
 router.get("/", authenticate, getAllPostsHandler);
+router.get("/:postId/likes", authenticate, getPostLikesHandler);
+router.post("/:postId/like", authenticate, toggleLikeHandler);
 
 router.post(
   "/",

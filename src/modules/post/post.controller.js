@@ -1,6 +1,6 @@
 import { validationResult } from "express-validator";
 import cloudinary from "../../config/cloudinary.js";
-import { createPost, getAllPosts } from "./post.model.js";
+import { createPost, getAllPosts, getLikesByPost, toggleLike } from "./post.model.js";
 
 export async function createPostHandler(req, res) {
   const errors = validationResult(req);
@@ -55,5 +55,36 @@ export async function getAllPostsHandler(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to load posts" });
+  }
+}
+export async function toggleLikeHandler(req, res) {
+  const userId = req.user?.id;
+  const postId = Number(req.params.postId);
+
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  if (!postId) return res.status(400).json({ message: "Invalid post id" });
+
+  try {
+    const result = await toggleLike(postId, userId);
+    if (result.liked) {
+      return res.json({ success: true, liked: true, message: "Post liked" });
+    }
+    return res.json({ success: true, liked: false, message: "Post unliked" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to toggle like" });
+  }
+}
+
+export async function getPostLikesHandler(req, res) {
+  const postId = Number(req.params.postId);
+  if (!postId) return res.status(400).json({ message: "Invalid post id" });
+
+  try {
+    const users = await getLikesByPost(postId);
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load post likes" });
   }
 }
