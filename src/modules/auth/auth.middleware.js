@@ -4,16 +4,12 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export function authenticate(req, res, next) {
   try {
-    let token;
-    // Check cookie first
-    if (req.cookies && req.cookies.token) token = req.cookies.token;
-    // Fallback to Authorization header
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-      token = req.headers.authorization.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
+    const token = authHeader.split(" ")[1];
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
     next();

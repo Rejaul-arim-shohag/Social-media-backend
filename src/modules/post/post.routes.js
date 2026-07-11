@@ -6,7 +6,7 @@ import { createPostHandler, getAllPostsHandler } from "./post.controller.js";
 
 const router = express.Router();
 
-router.get("/", getAllPostsHandler);
+router.get("/", authenticate, getAllPostsHandler);
 
 router.post(
   "/",
