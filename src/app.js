@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/auth.routes.js";
+import postRouter from "./modules/post/post.routes.js";
 
 const app = express();
 
@@ -19,16 +20,16 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
     res.json({
         success: true,
-        message: "Backend is running 🚀",
+        message: "Backend is running",
     });
 });
 
 // API routes
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/posts", postRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error("Unhandled error:", err);
     if (res.headersSent) return next(err);
     res.status(err.status || 500).json({ message: err.message || "Internal server error" });
 });

@@ -25,6 +25,19 @@ const startServer = async () => {
             ) ENGINE=InnoDB;
         `);
 
+        // Ensure posts table exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                text TEXT,
+                image_url VARCHAR(500),
+                visibility ENUM('public','private') DEFAULT 'public',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
         connection.release();
 
         app.listen(PORT, () => {
