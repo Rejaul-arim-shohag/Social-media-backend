@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/auth.routes.js";
 import postRouter from "./modules/post/post.routes.js";
 import commentRouter from "./modules/comment/comment.routes.js";
+import userRouter from "./modules/user/user.routes.js";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/posts", postRouter);
 app.use("/api/v1", commentRouter);
+app.use("/api/v1/users", userRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
