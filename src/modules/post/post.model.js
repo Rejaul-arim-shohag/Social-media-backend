@@ -14,7 +14,7 @@ export async function createPost({ userId, text, imageUrl, visibility }) {
     visibility: visibility || "public",
   };
 }
-export async function getAllPosts() {
+export async function getAllPosts(currentUserId) {
     const [rows] = await pool.execute(
         `SELECT p.id,
             p.user_id AS userId,
@@ -25,32 +25,59 @@ export async function getAllPosts() {
             u.first_name AS firstName,
             u.last_name AS lastName,
             u.email,
-            COALESCE(l.like_count, 0) AS likeCount
+            l.user_id AS likerId,
+            lu.first_name AS likerFirstName,
+            lu.last_name AS likerLastName,
+            lu.email AS likerEmail
      FROM posts p
      JOIN users u ON u.id = p.user_id
-     LEFT JOIN (
-       SELECT post_id, COUNT(*) AS like_count
-       FROM likes
-       GROUP BY post_id
-     ) l ON l.post_id = p.id
+     LEFT JOIN likes l ON l.post_id = p.id
+     LEFT JOIN users lu ON lu.id = l.user_id
      WHERE p.visibility = 'public'
      ORDER BY p.created_at DESC`,
     );
 
-    return rows.map((row) => ({
-        id: row.id,
-        userId: row.userId,
-        text: row.text,
-        imageUrl: row.imageUrl,
-        visibility: row.visibility,
-        createdAt: row.createdAt,
-        likeCount: row.likeCount,
-        author: {
-            firstName: row.firstName,
-            lastName: row.lastName,
-            email: row.email,
-        },
-    }));
+    const posts = [];
+    const postMap = new Map();
+
+    for (const row of rows) {
+        let post = postMap.get(row.id);
+        if (!post) {
+            post = {
+                id: row.id,
+                userId: row.userId,
+                text: row.text,
+                imageUrl: row.imageUrl,
+                visibility: row.visibility,
+                createdAt: row.createdAt,
+                likedByCurrentUser: false,
+                likers: [],
+                likeCount: 0,
+                author: {
+                    firstName: row.firstName,
+                    lastName: row.lastName,
+                    email: row.email,
+                },
+            };
+            postMap.set(row.id, post);
+            posts.push(post);
+        }
+
+        if (row.likerId) {
+            post.likers.push({
+                userId: row.likerId,
+                firstName: row.likerFirstName,
+                lastName: row.likerLastName,
+                email: row.likerEmail,
+            });
+            post.likeCount = post.likers.length;
+            if (currentUserId && row.likerId === currentUserId) {
+                post.likedByCurrentUser = true;
+            }
+        }
+    }
+
+    return posts;
 }
 
 export async function addLike(postId, userId) {

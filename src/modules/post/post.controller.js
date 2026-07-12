@@ -50,7 +50,8 @@ export async function createPostHandler(req, res) {
 
 export async function getAllPostsHandler(req, res) {
   try {
-    const posts = await getAllPosts();
+    const currentUserId = req.user?.id || null;
+    const posts = await getAllPosts(currentUserId);
     res.json({ success: true, posts });
   } catch (err) {
     console.error(err);
