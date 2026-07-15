@@ -1,6 +1,6 @@
 import { validationResult } from "express-validator";
 import cloudinary from "../../config/cloudinary.js";
-import { createPost, getAllPosts, getLikesByPost, toggleLike } from "./post.model.js";
+import { createPost, getAllPosts, getAllPostsWithComments, getLikesByPost, toggleLike } from "./post.model.js";
 
 export async function createPostHandler(req, res) {
   const errors = validationResult(req);
@@ -51,7 +51,10 @@ export async function createPostHandler(req, res) {
 export async function getAllPostsHandler(req, res) {
   try {
     const currentUserId = req.user?.id || null;
-    const posts = await getAllPosts(currentUserId);
+    const includeComments = req.query.includeComments === "true";
+    const posts = includeComments
+      ? await getAllPostsWithComments(currentUserId)
+      : await getAllPosts(currentUserId);
     res.json({ success: true, posts });
   } catch (err) {
     console.error(err);

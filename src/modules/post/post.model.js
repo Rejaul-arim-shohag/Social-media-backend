@@ -80,6 +80,59 @@ export async function getAllPosts(currentUserId) {
     return posts;
 }
 
+export async function getAllPostsWithComments(currentUserId) {
+    const posts = await getAllPosts(currentUserId);
+    if (posts.length === 0) return posts;
+
+    const postIds = posts.map((post) => post.id);
+    const placeholders = postIds.map(() => "?").join(",");
+    const [rows] = await pool.execute(
+        `SELECT c.id,
+                c.post_id AS postId,
+                c.user_id AS userId,
+                c.text,
+                c.created_at AS createdAt,
+                u.first_name AS firstName,
+                u.last_name AS lastName,
+                u.email,
+                COALESCE(l.like_count, 0) AS likeCount
+         FROM comments c
+         JOIN users u ON u.id = c.user_id
+         LEFT JOIN (
+             SELECT comment_id, COUNT(*) AS like_count FROM comment_likes GROUP BY comment_id
+         ) l ON l.comment_id = c.id
+         WHERE c.post_id IN (${placeholders})
+         ORDER BY c.created_at ASC`,
+        postIds
+    );
+
+    const commentsByPost = new Map();
+    for (const row of rows) {
+        const comment = {
+            id: row.id,
+            postId: row.postId,
+            userId: row.userId,
+            text: row.text,
+            createdAt: row.createdAt,
+            likeCount: row.likeCount,
+            author: {
+                firstName: row.firstName,
+                lastName: row.lastName,
+                email: row.email,
+            },
+        };
+        const list = commentsByPost.get(row.postId) || [];
+        list.push(comment);
+        commentsByPost.set(row.postId, list);
+    }
+
+    return posts.map((post) => ({
+        ...post,
+        commentCount: commentsByPost.get(post.id)?.length || 0,
+        comments: commentsByPost.get(post.id) || [],
+    }));
+}
+
 export async function addLike(postId, userId) {
     const [result] = await pool.execute(
         `INSERT IGNORE INTO likes (post_id, user_id) VALUES (?, ?)`,
