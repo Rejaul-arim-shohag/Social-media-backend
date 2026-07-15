@@ -40,6 +40,19 @@ router.post(
   addReplyHandler
 );
 
+// Alias: post + comment reply route
+router.get(
+  "/posts/:postId/comments/:commentId/replies",
+  authenticate,
+  getRepliesHandler
+);
+router.post(
+  "/posts/:postId/comments/:commentId/replies",
+  authenticate,
+  [body("text").notEmpty().withMessage("Text required")],
+  addReplyHandler
+);
+
 // Reply likes
 router.post("/replies/:replyId/like", authenticate, toggleReplyLikeHandler);
 router.get("/replies/:replyId/likes", authenticate, getReplyLikesHandler);
