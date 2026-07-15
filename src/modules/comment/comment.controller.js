@@ -8,6 +8,10 @@ import {
   getRepliesByComment,
   toggleReplyLike,
   getReplyLikes,
+  addNestedReply,
+  getNestedRepliesByReply,
+  toggleNestedReplyLike,
+  getNestedReplyLikes,
 } from "./comment.model.js";
 
 export async function addCommentHandler(req, res) {
@@ -129,5 +133,65 @@ export async function getReplyLikesHandler(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to load reply likes" });
+  }
+}
+
+// Nested replies handlers (replies to replies)
+export async function addNestedReplyHandler(req, res) {
+  const replyId = Number(req.params.replyId);
+  const userId = req.user?.id;
+  const { text } = req.body;
+
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  if (!replyId) return res.status(400).json({ message: "Invalid reply id" });
+
+  try {
+    const nested = await addNestedReply({ replyId, userId, text });
+    res.status(201).json({ success: true, nested });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to add nested reply" });
+  }
+}
+
+export async function getNestedRepliesHandler(req, res) {
+  const replyId = Number(req.params.replyId);
+  if (!replyId) return res.status(400).json({ message: "Invalid reply id" });
+
+  try {
+    const nested = await getNestedRepliesByReply(replyId);
+    res.json({ success: true, nested });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load nested replies" });
+  }
+}
+
+export async function toggleNestedReplyLikeHandler(req, res) {
+  const userId = req.user?.id;
+  const nestedReplyId = Number(req.params.nestedReplyId);
+
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  if (!nestedReplyId) return res.status(400).json({ message: "Invalid nested reply id" });
+
+  try {
+    const result = await toggleNestedReplyLike(nestedReplyId, userId);
+    res.json({ success: true, liked: result.liked });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to toggle nested reply like" });
+  }
+}
+
+export async function getNestedReplyLikesHandler(req, res) {
+  const nestedReplyId = Number(req.params.nestedReplyId);
+  if (!nestedReplyId) return res.status(400).json({ message: "Invalid nested reply id" });
+
+  try {
+    const users = await getNestedReplyLikes(nestedReplyId);
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load nested reply likes" });
   }
 }

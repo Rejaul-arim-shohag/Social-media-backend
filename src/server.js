@@ -103,6 +103,32 @@ const startServer = async () => {
             ) ENGINE=InnoDB;
         `);
 
+        // Ensure nested_replies table exists (replies to replies)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS nested_replies (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                reply_id INT NOT NULL,
+                user_id INT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (reply_id) REFERENCES replies(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
+        // Ensure nested_reply_likes table exists (likes for nested replies)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS nested_reply_likes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nested_reply_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_nested_reply_like (nested_reply_id, user_id),
+                FOREIGN KEY (nested_reply_id) REFERENCES nested_replies(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB;
+        `);
+
         connection.release();
 
         app.listen(PORT, () => {

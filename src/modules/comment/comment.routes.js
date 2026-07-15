@@ -10,6 +10,10 @@ import {
   getRepliesHandler,
   toggleReplyLikeHandler,
   getReplyLikesHandler,
+  addNestedReplyHandler,
+  getNestedRepliesHandler,
+  toggleNestedReplyLikeHandler,
+  getNestedReplyLikesHandler,
 } from "./comment.controller.js";
 
 const router = express.Router();
@@ -27,7 +31,7 @@ router.post(
 router.post("/comments/:commentId/like", authenticate, toggleCommentLikeHandler);
 router.get("/comments/:commentId/likes", authenticate, getCommentLikesHandler);
 
-// Replies
+// Replies (comments' replies)
 router.get("/comments/:commentId/replies", authenticate, getRepliesHandler);
 router.post(
   "/comments/:commentId/replies",
@@ -39,5 +43,18 @@ router.post(
 // Reply likes
 router.post("/replies/:replyId/like", authenticate, toggleReplyLikeHandler);
 router.get("/replies/:replyId/likes", authenticate, getReplyLikesHandler);
+
+// Nested replies (replies to replies)
+router.get("/replies/:replyId/replies", authenticate, getNestedRepliesHandler);
+router.post(
+  "/replies/:replyId/replies",
+  authenticate,
+  [body("text").notEmpty().withMessage("Text required")],
+  addNestedReplyHandler
+);
+
+// Nested reply likes
+router.post("/nested_replies/:nestedReplyId/like", authenticate, toggleNestedReplyLikeHandler);
+router.get("/nested_replies/:nestedReplyId/likes", authenticate, getNestedReplyLikesHandler);
 
 export default router;
